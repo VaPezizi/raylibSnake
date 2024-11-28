@@ -7,8 +7,8 @@
 const int screenWidth = 800;
 const int screenHeight = 800;
 
-const int cellCount = 40;
-const int cellSize = 20;
+const int cellCount = 20;
+const int cellSize = screenWidth / cellCount; //800 / 40,
 const int STARTLENGHT = 5;
 
 //Structs and enums
@@ -28,7 +28,6 @@ typedef struct SnakePart{
 
 typedef struct{
 	SnakePart * HEAD;
-	int size;
 	int direction;
 	int score;
 }Snake;
@@ -168,14 +167,14 @@ void freeSnake(Snake * snake){
 
 int main(){	
 	Apple apple = {};
-	Snake snake = {NULL, cellSize, RIGHT, 0};
+	Snake snake = {NULL, cellSize, RIGHT};
 
 	char score[20] = "";
 
 	moveApple(&snake, &apple);	
 
 	for(int i = 0; i < STARTLENGHT; i++){
-	       	addPart(20 * cellSize, (20 - i) *cellSize, &snake);	
+	       	addPart(STARTLENGHT * cellSize, (STARTLENGHT - i) *cellSize, &snake);	
 	
 	}
 
@@ -198,16 +197,23 @@ int main(){
 
 
 	while(!WindowShouldClose()){
-		if(IsKeyPressed(KEY_S))direction = DOWN;
-		else if(IsKeyPressed(KEY_W))direction = UP;
-		else if(IsKeyPressed(KEY_A))direction = LEFT;
-		else if(IsKeyPressed(KEY_D))direction = RIGHT;
+		int key = GetKeyPressed();
+		
+		/*
+		if(IsKeyPressed(KEY_S) && direction != UP)direction = DOWN;
+		else if(IsKeyPressed(KEY_W) && direction != DOWN)direction = UP;
+		else if(IsKeyPressed(KEY_A) && direction != RIGHT)direction = LEFT;
+		else if(IsKeyPressed(KEY_D) && direction != LEFT)direction = RIGHT;*/
+		if(key == KEY_S && direction != UP) direction = DOWN;
+		else if(key == KEY_W && direction != DOWN)direction = UP;
+		else if(key == KEY_A && direction != RIGHT)direction = LEFT;
+		else if(key == KEY_D && direction != LEFT) direction = RIGHT;
 
 		moveSnake(&snake, direction);
 
 		//Collisions with apple
 		if(checkCollision(&snake, &apple)){
-			snake.score++;
+			addPart(snake.HEAD->posY, snake.HEAD->posX, &snake);
 			moveApple(&snake, &apple);
 		}	
 
