@@ -67,17 +67,20 @@ int moveSnake(Snake * snake, int direction){
 	moveNode(snake);
 	switch(direction){
 		case RIGHT:
-			snake->HEAD->posX += cellSize;	
-			//snake->TA
+			snake->HEAD->posX = snake->HEAD->next->posX + cellSize;	
+			snake->HEAD->posY = snake->HEAD->next->posY;
 			break;
 		case LEFT:
-			snake->HEAD->posX -= cellSize;	
+			snake->HEAD->posX = snake->HEAD->next->posX - cellSize;	
+			snake->HEAD->posY = snake->HEAD->next->posY;
 			break;
 		case UP:
-			snake->HEAD->posY += cellSize;
+			snake->HEAD->posY = snake->HEAD->next->posY - cellSize;
+			snake->HEAD->posX = snake->HEAD->next->posX;
 			break;
 		case DOWN:
-			snake->HEAD->posY -= cellSize;
+			snake->HEAD->posY = snake->HEAD->next->posY + cellSize;
+			snake->HEAD->posX = snake->HEAD->next->posX;
 			break;
 		default:
 			fprintf(stderr, "ERROR IN SNAKE MOVING");
@@ -154,7 +157,7 @@ int main(){
 
 	InitWindow(screenWidth, screenHeight, "Raylib Snake");		
 	ClearBackground(WHITE);
-	SetTargetFPS(30);
+	SetTargetFPS(10);
 	
 	while(!WindowShouldClose()){
 		if(IsKeyPressed(KEY_S))direction = DOWN;
