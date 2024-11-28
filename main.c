@@ -1,6 +1,7 @@
 #include <raylib.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 //Some variables
 const int screenWidth = 800;
@@ -8,7 +9,7 @@ const int screenHeight = 800;
 
 const int cellCount = 40;
 const int cellSize = 20;
-
+const int STARTLENGHT = 5;
 
 //Structs and enums
 
@@ -31,6 +32,11 @@ typedef struct{
 	int direction;
 	int score;
 }Snake;
+
+typedef struct{
+	int posX;
+	int posY;
+}Apple;
 
 void * safeMalloc(size_t n){
 	void *p = malloc(n);
@@ -57,6 +63,20 @@ void moveNode(Snake * snake){
 	current->next = NULL;
 
 		
+}
+
+void moveApple(Snake * snake, Apple * apple){
+	srand(time(NULL));
+	int ry = rand() % cellCount;
+	int rx = rand() % cellCount;
+
+	apple->posX = rx;
+	apple->posY = ry;
+
+}
+
+int checkCollision(Snake * snake, Apple * apple){
+	return CheckCollisionPointRec((Vector2){snake->HEAD->posX, snake->HEAD->posY}, (Rectangle){apple->posX * cellSize, apple->posY * cellSize, cellSize, cellSize});
 }
 
 //Returns -1 if the move is "Illegal" (Meaning if you would lose the game)
@@ -147,8 +167,14 @@ void freeSnake(Snake * snake){
 
 
 int main(){	
+	Apple apple = {};
 	Snake snake = {NULL, cellSize, RIGHT, 0};
-	for(int i = 0; i < 5; i++){
+
+	char score[20] = "";
+
+	moveApple(&snake, &apple);	
+
+	for(int i = 0; i < STARTLENGHT; i++){
 	       	addPart(20 * cellSize, (20 - i) *cellSize, &snake);	
 	
 	}
@@ -158,7 +184,19 @@ int main(){
 	InitWindow(screenWidth, screenHeight, "Raylib Snake");		
 	ClearBackground(WHITE);
 	SetTargetFPS(10);
+
 	
+	RenderTexture2D target = LoadRenderTexture(screenWidth, screenHeight);	//I made the grid in to a RenderTexture2D here, to reduce the amount of draw's per frame, drastically
+
+	BeginTextureMode(target);
+	ClearBackground(BLANK);
+	for(int i = 0; i < cellCount + 1; i++){
+		DrawLineEx((Vector2){cellSize * i, 0},(Vector2){cellSize * i, screenHeight}, 2, BLACK);
+		DrawLineEx((Vector2){0, i*cellSize}, (Vector2){screenWidth, i*cellSize}, 2, BLACK);	
+	}
+	EndTextureMode();
+
+
 	while(!WindowShouldClose()){
 		if(IsKeyPressed(KEY_S))direction = DOWN;
 		else if(IsKeyPressed(KEY_W))direction = UP;
@@ -167,18 +205,34 @@ int main(){
 
 		moveSnake(&snake, direction);
 
+		//Collisions with apple
+		if(checkCollision(&snake, &apple)){
+			snake.score++;
+			moveApple(&snake, &apple);
+		}	
+
 		BeginDrawing();	
+		
+
+		DrawRectangle(cellSize * apple.posX, cellSize * apple.posY, cellSize, cellSize, RED);
 		drawSnake(&snake);
-		for(int i = 0; i < 41;i++){
+
+	/*	for(int i = 0; i < 41;i++){
 
 			DrawLineEx((Vector2){cellSize * i, 0},(Vector2){cellSize * i, screenHeight}, 2, BLACK);
 			DrawLineEx((Vector2){0, i*cellSize}, (Vector2){screenWidth, i*cellSize}, 2, BLACK);	
-		}
+		}*/
+		DrawTextureRec(target.texture, (Rectangle){0, 0, (float)target.texture.width, (float) -target.texture.height}, (Vector2){0,0}, WHITE);
+		
+		sprintf(score, "%d", snake.score - STARTLENGHT);
+		DrawText(score, (screenWidth * .8), 50, 100, BLACK);
 
 		ClearBackground(WHITE);	
 
 		EndDrawing();	
 	}
-	freeSnake(&snake);	
+	UnloadRenderTexture(target);
+	freeSnake(&snake);
+	CloseWindow();	
 	return 0;
 }
