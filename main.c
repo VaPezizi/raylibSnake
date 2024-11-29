@@ -64,14 +64,34 @@ void moveNode(Snake * snake){
 		
 }
 
+int newAppleInsideSnake(Snake * snake, int * rx, int * ry){
+	
+	SnakePart * part = snake->HEAD;	
+	
+	while(part != NULL){
+		if(part->posX == *rx * cellSize && part->posY == *ry * cellSize)return 1; 
+		part = part->next;	
+	}
+
+	return 0;
+}
+
+
 void moveApple(Snake * snake, Apple * apple){
 	srand(time(NULL));
 	int ry = rand() % cellCount;
 	int rx = rand() % cellCount;
 
+	while(newAppleInsideSnake(snake, &rx, &ry)){
+		ry = rand() % cellCount;
+		rx = rand() % cellCount;
+	}
+	
+
 	apple->posX = rx;
 	apple->posY = ry;
 
+	
 }
 
 int checkCollision(Snake * snake, Apple * apple){
@@ -164,7 +184,31 @@ void freeSnake(Snake * snake){
 	return;
 }
 
+int checkSnakeCollide(const Snake * snake){
+	Vector2 pos = (Vector2){snake->HEAD->posX,snake->HEAD->posY};	
+
+	if(snake->HEAD->next == NULL){
+		
+		fprintf(stderr, "Snake not initialized!!");
+		abort();
+	}
+	else{
+		SnakePart * temp = snake->HEAD->next;
+		while(temp->next != NULL){
+			if(CheckCollisionPointCircle(pos, (Vector2){temp->posX, temp->posY}, 5)) return 1;
+			temp = temp->next;
+		}
+
+		if(CheckCollisionPointCircle(pos, (Vector2){temp->posX, temp->posY}, 5)) return 1;
+
+	}
+	
+
+	return 0;
+}
+
 int checkFail(Snake * snake){
+	if(checkSnakeCollide(snake))return 1;
 	if(snake->HEAD->posX < 0){
 		puts("Snake x <= 0");	
 		return 1;	
@@ -188,7 +232,7 @@ int checkFail(Snake * snake){
 void initGame(Snake * snake, Apple * apple){
 
 	for(int i = 0; i < STARTLENGHT; i++){
-	       	addPart(STARTLENGHT * cellSize, (STARTLENGHT - i) *cellSize, snake);	
+	       	addPart(STARTLENGHT * cellSize, (STARTLENGHT + i) *cellSize, snake);	
 	
 	}
 	moveApple(snake, apple);	
@@ -248,6 +292,7 @@ int main(){
 
 		moveSnake(&snake, direction);
 		if(checkFail(&snake)) resetGameVars(&apple, &snake, score, &direction);	
+			
 
 		//Collisions with apple
 		if(checkCollision(&snake, &apple)){
