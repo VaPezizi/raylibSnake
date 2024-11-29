@@ -150,7 +150,7 @@ void drawSnake(Snake * snake){
 }
 void freeSnake(Snake * snake){
 	if(snake == NULL) return;
-	
+
 	SnakePart * iter = snake->HEAD;
 	SnakePart * temp = snake->HEAD;
 	
@@ -160,34 +160,59 @@ void freeSnake(Snake * snake){
 		iter = temp;	
 	}
 	free(iter);
+	snake = NULL;
 	return;
 }
 
+int checkFail(Snake * snake){
+	if(snake->HEAD->posX < 0){
+		puts("Snake x <= 0");	
+		return 1;	
+	}
+	if(snake->HEAD->posX >= cellCount * cellSize){
+		puts("Snake x too big!");
+		return 1;
+	}
+	if(snake->HEAD->posY < 0){
+		puts("Snake y <= 0");
+		return 1;	
+	}
+	if(snake->HEAD->posY >= cellCount * cellSize){
+		puts("Snake y too big!!");
+		return 1;	
+	}	
 
+	return 0;
+}
 
-int main(){	
-	Apple apple = {};
-	Snake snake = {NULL, cellSize, RIGHT};
-
-	char score[20] = "";
-
-	moveApple(&snake, &apple);	
+void initGame(Snake * snake, Apple * apple){
 
 	for(int i = 0; i < STARTLENGHT; i++){
-	       	addPart(STARTLENGHT * cellSize, (STARTLENGHT - i) *cellSize, &snake);	
+	       	addPart(STARTLENGHT * cellSize, (STARTLENGHT - i) *cellSize, snake);	
 	
 	}
-
-	int direction = RIGHT;
+	moveApple(snake, apple);	
 
 	InitWindow(screenWidth, screenHeight, "Raylib Snake");		
 	ClearBackground(WHITE);
 	SetTargetFPS(10);
+}
 
+void resetGameVars(Apple * apple, Snake * snake, char * score, int * direction){
+	freeSnake(snake);
+	*snake = (Snake){NULL, cellSize, 0};	
+	for(int i = 0; i < STARTLENGHT; i++){
+		addPart(STARTLENGHT * cellSize, (STARTLENGHT - i) * cellSize, snake);
+	}
+	*direction = RIGHT;
+	moveApple(snake, apple);
 	
-	RenderTexture2D target = LoadRenderTexture(screenWidth, screenHeight);	//I made the grid in to a RenderTexture2D here, to reduce the amount of draw's per frame, drastically
+}
 
-	BeginTextureMode(target);
+void makeTheGrid(RenderTexture2D * target){
+
+
+	BeginTextureMode(*target);
 	ClearBackground(BLANK);
 	for(int i = 0; i < cellCount + 1; i++){
 		DrawLineEx((Vector2){cellSize * i, 0},(Vector2){cellSize * i, screenHeight}, 2, BLACK);
@@ -195,21 +220,34 @@ int main(){
 	}
 	EndTextureMode();
 
+}
+
+
+int main(){	
+	Apple apple = {};
+	Snake snake = {NULL, cellSize, 0};
+
+	char score[20] = "";
+	int direction = RIGHT;
+
+
+	initGame(&snake, &apple);	
+
+	//Making the grid
+	RenderTexture2D target = LoadRenderTexture(screenWidth, screenHeight);	//I made the grid in to a RenderTexture2D here, to reduce the amount of draw's per frame, drastically
+	makeTheGrid(&target);
+
 
 	while(!WindowShouldClose()){
 		int key = GetKeyPressed();
 		
-		/*
-		if(IsKeyPressed(KEY_S) && direction != UP)direction = DOWN;
-		else if(IsKeyPressed(KEY_W) && direction != DOWN)direction = UP;
-		else if(IsKeyPressed(KEY_A) && direction != RIGHT)direction = LEFT;
-		else if(IsKeyPressed(KEY_D) && direction != LEFT)direction = RIGHT;*/
-		if(key == KEY_S && direction != UP) direction = DOWN;
-		else if(key == KEY_W && direction != DOWN)direction = UP;
-		else if(key == KEY_A && direction != RIGHT)direction = LEFT;
-		else if(key == KEY_D && direction != LEFT) direction = RIGHT;
+		if((key == KEY_S || key == KEY_J) && direction != UP) direction = DOWN;
+		else if((key == KEY_W || key == KEY_K) && direction != DOWN)direction = UP;
+		else if((key == KEY_A || key == KEY_H) && direction != RIGHT)direction = LEFT;
+		else if((key == KEY_D || key == KEY_L)  && direction != LEFT) direction = RIGHT;
 
 		moveSnake(&snake, direction);
+		if(checkFail(&snake)) resetGameVars(&apple, &snake, score, &direction);	
 
 		//Collisions with apple
 		if(checkCollision(&snake, &apple)){
@@ -223,14 +261,9 @@ int main(){
 		DrawRectangle(cellSize * apple.posX, cellSize * apple.posY, cellSize, cellSize, RED);
 		drawSnake(&snake);
 
-	/*	for(int i = 0; i < 41;i++){
-
-			DrawLineEx((Vector2){cellSize * i, 0},(Vector2){cellSize * i, screenHeight}, 2, BLACK);
-			DrawLineEx((Vector2){0, i*cellSize}, (Vector2){screenWidth, i*cellSize}, 2, BLACK);	
-		}*/
 		DrawTextureRec(target.texture, (Rectangle){0, 0, (float)target.texture.width, (float) -target.texture.height}, (Vector2){0,0}, WHITE);
 		
-		sprintf(score, "%d", snake.score - STARTLENGHT);
+		sprintf(score, "%d", (snake.score - STARTLENGHT));
 		DrawText(score, (screenWidth * .8), 50, 100, BLACK);
 
 		ClearBackground(WHITE);	
