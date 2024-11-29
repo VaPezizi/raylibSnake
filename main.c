@@ -69,7 +69,9 @@ int newAppleInsideSnake(Snake * snake, int * rx, int * ry){
 	SnakePart * part = snake->HEAD;	
 	
 	while(part != NULL){
-		if(part->posX == *rx * cellSize && part->posY == *ry * cellSize)return 1; 
+		//puts("ALOO");
+		printf("PosX: %d\nPosY: %d\nrx*cellSize: %d\nry*cellSize:%d\n", part->posX, part->posY, *rx * cellSize, *ry * cellSize);
+		if(part->posX == *rx * cellSize && part->posY == *ry)return 1; 
 		part = part->next;	
 	}
 
@@ -85,6 +87,7 @@ void moveApple(Snake * snake, Apple * apple){
 	while(newAppleInsideSnake(snake, &rx, &ry)){
 		ry = rand() % cellCount;
 		rx = rand() % cellCount;
+		puts("HALOOO TAALA");
 	}
 	
 
@@ -244,9 +247,9 @@ void initGame(Snake * snake, Apple * apple){
 
 void resetGameVars(Apple * apple, Snake * snake, char * score, int * direction){
 	freeSnake(snake);
-	*snake = (Snake){NULL, cellSize, 0};	
+	*snake = (Snake){NULL, *direction, 0};	
 	for(int i = 0; i < STARTLENGHT; i++){
-		addPart(STARTLENGHT * cellSize, (STARTLENGHT - i) * cellSize, snake);
+		addPart(STARTLENGHT * cellSize, (STARTLENGHT + i) * cellSize, snake);
 	}
 	*direction = RIGHT;
 	moveApple(snake, apple);
@@ -269,7 +272,7 @@ void makeTheGrid(RenderTexture2D * target){
 
 int main(){	
 	Apple apple = {};
-	Snake snake = {NULL, cellSize, 0};
+	Snake snake = {NULL, RIGHT, 0};
 
 	char score[20] = "";
 	int direction = RIGHT;
