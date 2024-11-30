@@ -71,10 +71,10 @@ int newAppleInsideSnake(Snake * snake, int * rx, int * ry){
 	while(part != NULL){
 		//puts("ALOO");
 		printf("PosX: %d\nPosY: %d\nrx*cellSize: %d\nry*cellSize:%d\n", part->posX, part->posY, *rx * cellSize, *ry * cellSize);
-		if(part->posX == *rx * cellSize && part->posY == *ry)return 1; 
+		if(part->posX == *rx * cellSize && part->posY == *ry * cellSize)return 1; 
 		part = part->next;	
 	}
-
+	puts("----------------------");
 	return 0;
 }
 
