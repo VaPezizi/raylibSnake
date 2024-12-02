@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 //Some variables
 const int screenWidth = 800;
@@ -10,6 +11,8 @@ const int screenHeight = 800;
 const int cellCount = 20;
 const int cellSize = screenWidth / cellCount; //800 / 40,
 const int STARTLENGHT = 5;
+
+int colormode = 0;
 
 //Structs and enums
 
@@ -162,15 +165,29 @@ void drawSnake(Snake * snake){
 		abort();
 	}
 	else{
+		int n = 0;
 		SnakePart * temp = snake->HEAD;
-		while(temp->next != NULL){
+		if(colormode){
+			while(temp->next != NULL){
+				if(n >= 340) n = 0;
+				else n = n + 20;
+				DrawRectangle(temp->posX, temp->posY, cellSize, cellSize, ColorFromHSV(n, 1, 1));
+				temp = temp->next;
+			}
+			DrawRectangle(temp->posX, temp->posY, cellSize, cellSize, ColorFromHSV(n, 1, 1));
+		}else{
+
+			while(temp->next != NULL){
+				DrawRectangle(temp->posX, temp->posY, cellSize, cellSize, GREEN);
+				temp = temp->next;
+			}
 			DrawRectangle(temp->posX, temp->posY, cellSize, cellSize, GREEN);
-			temp = temp->next;
 		}
-		DrawRectangle(temp->posX, temp->posY, cellSize, cellSize, GREEN);
 
 	}
 }
+
+
 void freeSnake(Snake * snake){
 	if(snake == NULL) return;
 
@@ -270,7 +287,18 @@ void makeTheGrid(RenderTexture2D * target){
 }
 
 
-int main(){	
+int main(int argc, char * argv[]){	
+
+	if(argc > 1){
+		if(strcmp(argv[1], "-h") == 0){
+			printf("Usage:\n-h\tPrints this menu\n-rainbow\tStarts the game in rainbow snake mode\n");	
+			return 0;
+		}
+		else if(strcmp(argv[1], "-rainbow") == 0){
+			colormode = 1;		
+		}
+	}
+
 	Apple apple = {};
 	Snake snake = {NULL, RIGHT, 0};
 
