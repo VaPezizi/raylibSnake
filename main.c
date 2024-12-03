@@ -40,6 +40,7 @@ typedef struct{
 	int posY;
 }Apple;
 
+//Safe wrapper for malloc, maybe useless but idc
 void * safeMalloc(size_t n){
 	void *p = malloc(n);
 	if(p==NULL){
@@ -49,9 +50,10 @@ void * safeMalloc(size_t n){
 	return p;
 }
 
+//Doesn't move the snake itself, but changes the position of nodes in the "Snake"	(The linked list)
 void moveNode(Snake * snake){
 	if(snake->HEAD == NULL){
-		fprintf(stderr, "Error in snake moving");
+		fprintf(stderr, "Error in snake moving, snake head NULL!");
 		abort();
 	}
 	if(snake->score < 3) return;
@@ -66,7 +68,7 @@ void moveNode(Snake * snake){
 
 		
 }
-
+//Checks if given coordinates are inside the snake
 int newAppleInsideSnake(Snake * snake, int * rx, int * ry){
 	
 	SnakePart * part = snake->HEAD;	
@@ -81,7 +83,7 @@ int newAppleInsideSnake(Snake * snake, int * rx, int * ry){
 	return 0;
 }
 
-
+//Moves the apple to a new random location
 void moveApple(Snake * snake, Apple * apple){
 	srand(time(NULL));
 	int ry = rand() % cellCount;
@@ -100,10 +102,12 @@ void moveApple(Snake * snake, Apple * apple){
 	
 }
 
+//TODO: Optimize this, i'm no expert, but i'd guess checking the collision this way is slower than it has to
 int checkCollision(Snake * snake, Apple * apple){
 	return CheckCollisionPointRec((Vector2){snake->HEAD->posX, snake->HEAD->posY}, (Rectangle){apple->posX * cellSize, apple->posY * cellSize, cellSize, cellSize});
 }
 
+//This actually moves the snake itself, calls moveNode first, and then just updates the position of the snakes HEAD node
 int moveSnake(Snake * snake, int direction){
 	
 	if(snake->HEAD == NULL) return -1;	
@@ -132,7 +136,7 @@ int moveSnake(Snake * snake, int direction){
 
 	return 1;
 }
-
+//Pretty simple, adds a part to the snake, with given coordinates
 void addPart(const int posY, const int posX, Snake * snake){
 	snake->score++;
 	if(snake->HEAD == NULL){
@@ -157,6 +161,7 @@ void addPart(const int posY, const int posX, Snake * snake){
 	}	
 	return;	
 }
+//Also pretty self explanitory, draws the snake. BeginDrawing(), or something similar has to be called before this
 void drawSnake(Snake * snake){
 	if(snake->HEAD == NULL){
 		
@@ -169,8 +174,8 @@ void drawSnake(Snake * snake){
 		if(colormode){
 			while(temp->next != NULL){
 				if(n >= 340) n = 0;
-				else n = n + 20;
-				DrawRectangle(temp->posX, temp->posY, cellSize, cellSize, ColorFromHSV(n, 1, 1));
+				else n = n + 10;
+				DrawRectangle(temp->posX, temp->posY, cellSize, cellSize, ColorFromHSV(n, 1, 1));	//Draws the snake parts with a color based of the index (-rainbow)
 				temp = temp->next;
 			}
 			DrawRectangle(temp->posX, temp->posY, cellSize, cellSize, ColorFromHSV(n, 1, 1));
@@ -186,7 +191,7 @@ void drawSnake(Snake * snake){
 	}
 }
 
-
+//Frees the memory occupied by the snake
 void freeSnake(Snake * snake){
 	if(snake == NULL) return;
 
@@ -203,6 +208,7 @@ void freeSnake(Snake * snake){
 	return;
 }
 
+//Checks if the snake is colloding with itself	//TODO: I go loop trough the snake so much, check for optimisations
 int checkSnakeCollide(const Snake * snake){
 	Vector2 pos = (Vector2){snake->HEAD->posX,snake->HEAD->posY};	
 
@@ -226,6 +232,7 @@ int checkSnakeCollide(const Snake * snake){
 	return 0;
 }
 
+//Checks that the snake is inbounds, and collision with itself
 int checkFail(Snake * snake){
 
 	if(snake->HEAD->posX < 0){
@@ -248,6 +255,19 @@ int checkFail(Snake * snake){
 	return 0;
 }
 
+//Makes the grid for the game
+void makeTheGrid(RenderTexture2D * target){
+
+	BeginTextureMode(*target);
+	ClearBackground(BLANK);
+	for(int i = 0; i < cellCount + 1; i++){
+		DrawLineEx((Vector2){cellSize * i, 0},(Vector2){cellSize * i, screenHeight}, 2, BLACK);
+		DrawLineEx((Vector2){0, i*cellSize}, (Vector2){screenWidth, i*cellSize}, 2, BLACK);	
+	}
+	EndTextureMode();
+
+}
+// Inits the game (Makes the snake, apple (only kind of) and some small stuff)
 void initGame(Snake * snake, Apple * apple){
 
 	for(int i = 0; i < STARTLENGHT; i++){
@@ -259,8 +279,10 @@ void initGame(Snake * snake, Apple * apple){
 	InitWindow(screenWidth, screenHeight, "Raylib Snake");		
 	ClearBackground(WHITE);
 	SetTargetFPS(10);
+
 }
 
+//Resets the arguments to their default states
 void resetGameVars(Apple * apple, Snake * snake, char * score, int * direction){
 	freeSnake(snake);
 	*snake = (Snake){NULL, *direction, 0};	
@@ -272,18 +294,6 @@ void resetGameVars(Apple * apple, Snake * snake, char * score, int * direction){
 	
 }
 
-void makeTheGrid(RenderTexture2D * target){
-
-
-	BeginTextureMode(*target);
-	ClearBackground(BLANK);
-	for(int i = 0; i < cellCount + 1; i++){
-		DrawLineEx((Vector2){cellSize * i, 0},(Vector2){cellSize * i, screenHeight}, 2, BLACK);
-		DrawLineEx((Vector2){0, i*cellSize}, (Vector2){screenWidth, i*cellSize}, 2, BLACK);	
-	}
-	EndTextureMode();
-
-}
 
 
 int main(int argc, char * argv[]){	
@@ -301,21 +311,24 @@ int main(int argc, char * argv[]){
 	Apple apple = {};
 	Snake snake = {NULL, RIGHT, 0};
 
+
 	char score[20] = "";
 	int direction = RIGHT;
 
 
 	initGame(&snake, &apple);	
 
-	//Making the grid
 	RenderTexture2D target = LoadRenderTexture(screenWidth, screenHeight);	//I made the grid in to a RenderTexture2D here, to reduce the amount of draw's per frame, drastically
 	makeTheGrid(&target);
 
+//	char fps[10] = "";	
 
 	while(!WindowShouldClose()){
 		int key = GetKeyPressed();
-	
-		while(key > 0){
+		sprintf(score, "%d", (snake.score - STARTLENGHT));
+//		sprintf(fps, "%d", GetFPS());
+
+		while(key > 0){		//This should make the inputs more reliable
 			//fprintf(stdout, "" + key);	
 			if((key == KEY_S || key == KEY_J) && direction != UP) direction = DOWN;
 			if((key == KEY_W || key == KEY_K) && direction != DOWN)direction = UP;
@@ -335,6 +348,10 @@ int main(int argc, char * argv[]){
 			moveApple(&snake, &apple);
 		}	
 
+
+	//======== ( DRAWING ) ========
+
+
 		BeginDrawing();	
 		
 
@@ -343,8 +360,10 @@ int main(int argc, char * argv[]){
 
 		DrawTextureRec(target.texture, (Rectangle){0, 0, (float)target.texture.width, (float) -target.texture.height}, (Vector2){0,0}, WHITE);
 		
-		sprintf(score, "%d", (snake.score - STARTLENGHT));
+
 		DrawText(score, (screenWidth * .8), 50, 100, BLACK);
+		
+//		DrawText(fps, 700, 700, 40, GREEN);
 
 		ClearBackground(WHITE);	
 
