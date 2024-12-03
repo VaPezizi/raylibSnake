@@ -104,7 +104,6 @@ int checkCollision(Snake * snake, Apple * apple){
 	return CheckCollisionPointRec((Vector2){snake->HEAD->posX, snake->HEAD->posY}, (Rectangle){apple->posX * cellSize, apple->posY * cellSize, cellSize, cellSize});
 }
 
-//Returns -1 if the move is "Illegal" (Meaning if you would lose the game)
 int moveSnake(Snake * snake, int direction){
 	
 	if(snake->HEAD == NULL) return -1;	
@@ -228,7 +227,7 @@ int checkSnakeCollide(const Snake * snake){
 }
 
 int checkFail(Snake * snake){
-	if(checkSnakeCollide(snake))return 1;
+
 	if(snake->HEAD->posX < 0){
 		puts("Snake x <= 0");	
 		return 1;	
@@ -245,7 +244,7 @@ int checkFail(Snake * snake){
 		puts("Snake y too big!!");
 		return 1;	
 	}	
-
+	if(checkSnakeCollide(snake))return 1;
 	return 0;
 }
 
@@ -315,11 +314,16 @@ int main(int argc, char * argv[]){
 
 	while(!WindowShouldClose()){
 		int key = GetKeyPressed();
-		
-		if((key == KEY_S || key == KEY_J) && direction != UP) direction = DOWN;
-		else if((key == KEY_W || key == KEY_K) && direction != DOWN)direction = UP;
-		else if((key == KEY_A || key == KEY_H) && direction != RIGHT)direction = LEFT;
-		else if((key == KEY_D || key == KEY_L)  && direction != LEFT) direction = RIGHT;
+	
+		while(key > 0){
+			//fprintf(stdout, "" + key);	
+			if((key == KEY_S || key == KEY_J) && direction != UP) direction = DOWN;
+			if((key == KEY_W || key == KEY_K) && direction != DOWN)direction = UP;
+			if((key == KEY_A || key == KEY_H) && direction != RIGHT)direction = LEFT;
+			if((key == KEY_D || key == KEY_L)  && direction != LEFT) direction = RIGHT;
+
+			key = GetCharPressed();
+		}
 
 		moveSnake(&snake, direction);
 		if(checkFail(&snake)) resetGameVars(&apple, &snake, score, &direction);	
